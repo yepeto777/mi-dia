@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi Día · Planificador</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#2b2b2b;--mut:#6b6b6b;--acc:#b5793f;--line:#e8e1d6;--p1:#c0392b;--p2:#d68910;--p3:#2e8b57;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1814;--card:#2a241e;--ink:#f1ebe2;--mut:#a89d90;--acc:#d9a066;--line:#40372e}}
+:root[data-theme="dark"]{--bg:#1c1814;--card:#2a241e;--ink:#f1ebe2;--mut:#a89d90;--acc:#d9a066;--line:#40372e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.4}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{margin:0;font-size:28px}h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:26px 0 10px}
+.sub{color:var(--mut);margin:2px 0 14px;text-transform:capitalize}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input,select,button{font:inherit;color:inherit;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 11px}
+input[type=text]{flex:1 1 100%}
+button{cursor:pointer}button.pri{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600}
+.bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.stats{display:flex;justify-content:space-between;color:var(--mut);font-size:14px}
+.task{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:8px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:12px}
+.task .t{flex:1;min-width:0;overflow-wrap:anywhere}.task small{color:var(--mut);display:block}
+.time{font-weight:700;font-variant-numeric:tabular-nums;min-width:96px;font-size:14px}
+.task input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
+.ic{padding:5px 9px;border-radius:8px;background:transparent}
+.done .t{text-decoration:line-through;color:var(--mut)}
+#timer{display:none;text-align:center}#timer b{font-size:44px;font-variant-numeric:tabular-nums;display:block}
+.goal{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.goal b{overflow-wrap:anywhere}.goal .row{margin-top:8px}.goal button{font-size:13px;padding:6px 10px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.cal div{text-align:center;font-size:13px;color:var(--mut)}
+.cal button{padding:0;aspect-ratio:1;min-height:38px;border-radius:9px;background:var(--bg);font-size:13px;line-height:1.1;color:var(--ink)}
+.cal button.td{border-color:var(--acc);font-weight:700}.cal button.sel{background:var(--acc);color:#fff}.cal button.z{visibility:hidden}
+.ch{display:flex;justify-content:space-between;align-items:center;font-weight:600;text-transform:capitalize}
+.nav{display:flex;gap:8px;margin:0 0 14px}.nav button{flex:1;font-weight:600;padding:11px}.nav button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+body[data-pg="metas"] .pd,body[data-pg="prog"] .pd,body[data-pg="prog"] .pm{display:none!important}body:not([data-pg="metas"]) .pm{display:none!important}body:not([data-pg="prog"]) .pp{display:none!important}.kp{flex:1;min-width:110px;text-align:center}.kp b{display:block;font-size:26px}
+.empty{color:var(--mut);text-align:center;padding:18px}
+label{font-size:14px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mi Día</h1>
+  <p class="sub" id="date"></p>
+  <p class="sub" id="sync" style="text-transform:none;margin:-8px 0 12px;font-size:13px">📱 Solo en este dispositivo</p>
+  <div class="nav"><button id="n1" class="on">📋 Mi día</button><button id="n2">🎯 Metas</button><button id="n3">📊 Progreso</button></div>
+
+  <div class="card pd">
+    <div class="stats"><span id="s1"></span><span id="s2"></span></div>
+    <div class="bar"><i id="pb"></i></div>
+  </div>
+
+  <h2 class="pm">Mis metas</h2>
+  <div class="card pm">
+    <div class="row">
+      <input type="text" id="gname" placeholder="Meta (ej. Aprender inglés, Aprender Excel)" maxlength="80">
+      <input type="date" id="gdate" aria-label="Fecha límite">
+      <select id="gmin" aria-label="Minutos por día"><option value="15">15 min/día</option><option value="30" selected>30 min/día</option><option value="45">45 min/día</option><option value="60">1 h/día</option><option value="90">1 h 30/día</option></select>
+      <button class="pri" id="gadd">Crear meta</button>
+    </div>
+    <div class="ch" style="margin-top:14px"><button id="pm" class="ic">◀</button><span id="mt"></span><button id="nm" class="ic">▶</button></div>
+    <div class="cal" id="cal"></div>
+    <p class="sub" style="text-transform:none;font-size:13px;margin:8px 0 0">Toca un día del calendario para elegir tu fecha límite. 🎯 = meta · ● = día que trabajaste en ella.</p>
+  </div>
+  <div id="goals" class="pm" style="margin-top:10px"></div>
+
+  <h2 class="pd">Nueva tarea</h2>
+  <div class="card row pd">
+    <input type="text" id="title" placeholder="¿Qué tienes que hacer?" maxlength="80">
+    <select id="dur" aria-label="Duración">
+      <option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option>
+      <option value="60">1 h</option><option value="90">1 h 30</option><option value="120">2 h</option>
+    </select>
+    <select id="pri" aria-label="Prioridad">
+      <option value="1">🔴 Alta</option><option value="2" selected>🟠 Media</option><option value="3">🟢 Baja</option>
+    </select>
+    <select id="cat" aria-label="Categoría"><option>Colegio</option><option>Casa</option><option>Habilidad</option><option>Otro</option></select>
+    <select id="hard" aria-label="Dificultad"><option value="0">😌 Fácil</option><option value="1">🔥 Difícil</option></select>
+    <select id="rep" aria-label="Repetir"><option value="0">Una vez</option><option value="1">🔁 Cada día</option></select>
+    <select id="who" aria-label="Para quién"><option>Yo</option><option>Amigo</option></select>
+    <button class="pri" id="add">Agregar</button>
+  </div>
+
+  <h2 class="pd">Configuración</h2>
+  <div class="card row pd" style="align-items:center">
+    <label>Empezar a las <input type="time" id="start" value="08:00"></label>
+    <button id="now">Desde ahora</button>
+    <label>Descanso <select id="brk"><option value="0">0</option><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option></select> min</label>
+    <label>Lo difícil en la <select id="en"><option value="am">mañana</option><option value="pm">tarde</option></select></label>
+  </div>
+
+  <div class="card pd" id="timer" style="margin-top:14px">
+    <small id="tname" style="color:var(--mut)"></small>
+    <b id="tclock">00:00</b>
+    <div class="row" style="justify-content:center;margin-top:8px">
+      <button id="tdone" class="pri">✓ Terminé</button><button id="tstop">Cancelar</button>
+    </div>
+  </div>
+
+  <h2 class="pd">Plan del día (ordenado por prioridad)</h2>
+  <div id="plan" class="pd"></div>
+  <h2 class="pd" id="dh" style="display:none">Completadas</h2>
+  <div id="done" class="pd"></div>
+  <div id="prog" class="pp"></div>
+  <p class="sub pd" style="text-transform:none;margin-top:24px">Las tareas importantes van primero y, dentro de cada prioridad, las más cortas para avanzar rápido. Tu lista se guarda en este dispositivo.</p>
+</div>
+<script>
+var S={tasks:[],goals:[],hist:{},en:"am",start:"08:00",brk:5},$=function(i){return document.getElementById(i)};
+try{var r=localStorage.getItem("midia");if(r){var o=JSON.parse(r);if(o&&o.tasks){S=o;S.goals=S.goals||[];S.hist=S.hist||{}}}}catch(e){}
+function save(){try{localStorage.setItem("midia",JSON.stringify(S))}catch(e){}push()}
+var ref=null,rw=true,pt=null;
+function status(m){$("sync").textContent=m}
+function push(){if(!ref||!rw)return;clearTimeout(pt);pt=setTimeout(function(){ref.set({json:JSON.stringify(S),ts:Date.now()}).catch(function(){rw=false;status("👀 Solo lectura")})},400)}
+var COL={1:"var(--p1)",2:"var(--p2)",3:"var(--p3)"};
+function hm(m){m=Math.round(m)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
+function dl(m){return m>=60?(Math.floor(m/60)+" h"+(m%60?" "+m%60+" min":"")):m+" min"}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function diff(a,b){return Math.round((new Date(b+"T00:00")-new Date(a+"T00:00"))/864e5)}
+var busy=null,fl=null,cm=new Date();cm=new Date(cm.getFullYear(),cm.getMonth(),1);
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function row(t,time){
+  return '<div class="task'+(t.done?' done':'')+'" style="--c:'+COL[t.p]+'"><input type="checkbox" data-c="'+t.id+'"'+(t.done?' checked':'')+' aria-label="Completar">'+
+  (time?'<span class="time">'+time+'</span>':'')+'<div class="t">'+esc(t.t)+'<small>'+dl(t.d)+(t.c?" · "+t.c:"")+(t.h?" · 🔥":"")+(t.r?" · 🔁":"")+(t.w=="Amigo"?" · 👤 Amigo":"")+'</small></div>'+
+  (t.done?'':'<button class="ic" data-p="'+t.id+'" title="Enfocar">▶</button>')+'<button class="ic" data-x="'+t.id+'" title="Borrar">✕</button></div>'}
+function render(){
+  $("date").textContent=new Date().toLocaleDateString("es-DO",{weekday:"long",day:"numeric",month:"long"});
+  $("start").value=S.start;$("brk").value=String(S.brk);$("en").value=S.en||"am";
+  var pend=S.tasks.filter(function(t){return!t.done}).sort(function(a,b){return a.p-b.p||((S.en=="pm"?a.h-b.h:b.h-a.h)||0)||a.d-b.d||a.id-b.id});
+  var dn=S.tasks.filter(function(t){return t.done});
+  var p=S.start.split(":"),cur=(+p[0])*60+(+p[1]),h="";
+  pend.forEach(function(t){h+=row(t,hm(cur)+" – "+hm(cur+t.d));cur+=t.d+S.brk});
+  $("plan").innerHTML=h||'<div class="card empty">Agrega tus tareas y armo tu día automáticamente ✨</div>';
+  $("done").innerHTML=dn.map(function(t){return row(t)}).join("");$("dh").style.display=dn.length?"block":"none";
+  var tot=S.tasks.length,pc=tot?Math.round(dn.length/tot*100):0,left=pend.reduce(function(a,t){return a+t.d},0);
+  $("s1").textContent=dn.length+" de "+tot+" tareas ("+pc+"%)";
+  $("s2").textContent=pend.length?"Termina hacia las "+hm(cur-S.brk):"¡Todo listo! 🎉";
+  $("pb").style.width=pc+"%";goals();stats();
+}
+function add(){var v=$("title").value.trim();if(!v)return;
+  S.tasks.push({id:Date.now(),t:v,d:+$("dur").value,p:+$("pri").value,done:false,c:$("cat").value,h:+$("hard").value,r:+$("rep").value,w:$("who").value});$("title").value="";save();render();$("title").focus()}
+$("add").onclick=add;$("title").onkeydown=function(e){if(e.key==="Enter")add()};
+$("start").onchange=function(){S.start=this.value||"08:00";save();render()};
+$("en").onchange=function(){S.en=this.value;save();render()};
+$("brk").onchange=function(){S.brk=+this.value;save();render()};
+$("now").onclick=function(){var d=new Date();S.start=hm(Math.ceil((d.getHours()*60+d.getMinutes())/5)*5);save();render()};
+var tk=null;
+function stopT(){clearInterval(tk);tk=null;$("timer").style.display="none"}
+function startT(t){stopT();var end=Date.now()+t.d*60000;$("tname").textContent="Enfoque: "+t.t;$("timer").style.display="block";$("tdone").onclick=function(){setDone(S.tasks.filter(function(x){return x.id==t.id})[0]||t,true);stopT();save();render()};
+  function tick(){var s=Math.max(0,Math.round((end-Date.now())/1000));$("tclock").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");if(!s){clearInterval(tk);$("tname").textContent="⏰ ¡Tiempo! "+t.t}}
+  tick();tk=setInterval(tick,500)}
+$("tstop").onclick=stopT;
+document.addEventListener("click",function(e){var g=e.target,id;
+  if(id=g.getAttribute("data-x")){S.tasks=S.tasks.filter(function(t){return t.id!=id});save();render()}
+  else if(id=g.getAttribute("data-p")){var t=S.tasks.filter(function(t){return t.id==id})[0];if(t)startT(t)}});
+document.addEventListener("change",function(e){var pk=e.target.getAttribute("data-pk");if(pk){var q=pk.split(":");S.goals.forEach(function(g){if(g.id==q[0]&&g.plan&&g.plan[q[1]])g.plan[q[1]].ok=e.target.checked?1:0});save();render();return}
+  var id=e.target.getAttribute("data-c");if(id){S.tasks.forEach(function(t){if(t.id==id)setDone(t,e.target.checked)});save();render()}});
+function setDone(t,v){if(!!t.done!==!!v)hAdd(v?t.d:-t.d);t.done=v;if(t.g)S.goals.forEach(function(g){if(g.id==t.g){if(v)g.log[iso(new Date())]=1;else delete g.log[iso(new Date())]}})}
+function goals(){
+  var td=iso(new Date()),sel=$("gdate").value;
+  $("mt").textContent=cm.toLocaleDateString("es-DO",{month:"long",year:"numeric"});
+  var f=new Date(cm.getFullYear(),cm.getMonth(),1),n=new Date(cm.getFullYear(),cm.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;
+  var h="LMMJVSD".split("").map(function(x){return"<div>"+x+"</div>"}).join("");
+  for(var i=0;i<off;i++)h+='<button class="z"></button>';
+  for(var d=1;d<=n;d++){var k=iso(new Date(cm.getFullYear(),cm.getMonth(),d)),m="",tt=[];
+    S.goals.forEach(function(g){if(g.date==k){m="🎯";tt.push(g.n)}else if(g.log[k]&&!m)m="●"});
+    h+='<button data-d="'+k+'" class="'+(k==td?"td ":"")+(k==sel?"sel":"")+'" title="'+esc(tt.join(", "))+'">'+d+'<br>'+m+'</button>'}
+  $("cal").innerHTML=h;
+  $("goals").innerHTML=S.goals.map(function(g){
+    var tot=Math.max(1,diff(g.start,g.date)+1),dn=Object.keys(g.log).length,pc=Math.min(100,Math.round(dn/tot*100)),left=diff(td,g.date),hoy=!!g.log[td];
+    var ex=Math.min(100,(diff(g.start,td)+1)/tot*100),sg=left<0?"":(pc>=ex-10?"✅ Vas bien":"⚠️ Vas atrasado, ¡retoma hoy!");
+    var pl=(g.plan||[]).map(function(s,i){return'<label style="display:block;margin-top:8px"><input type="checkbox" data-pk="'+g.id+':'+i+'"'+(s.ok?" checked":"")+'> <b>'+esc(s.t)+'</b><small style="display:block;color:var(--mut);margin-left:24px">'+esc(s.d)+'</small></label>'}).join("");
+    var st=left<0?"Fecha vencida":left==0?"¡Es hoy!":"Faltan "+left+" día"+(left==1?"":"s");
+    return '<div class="goal"><div class="stats" style="color:var(--ink)"><b>🎯 '+esc(g.n)+'</b><button class="ic" data-gx="'+g.id+'">✕</button></div>'+
+    '<div class="stats"><span>'+new Date(g.date+"T00:00").toLocaleDateString("es-DO",{day:"numeric",month:"short",year:"numeric"})+" · "+st+'</span><span>'+dn+' de '+tot+' días · '+pc+'%</span></div>'+
+    '<div class="bar"><i style="width:'+pc+'%"></i></div><div class="row">'+
+    '<button data-gp="'+g.id+'">'+(fl==g.id?"✓ Agregada a Mi día":"+ Agregar a mi plan de hoy ("+g.min+" min)")+'</button>'+
+    '<button data-gl="'+g.id+'" class="'+(hoy?"pri":"")+'">'+(hoy?"✓ Hoy hecho":"Marcar hoy como hecho")+'</button><button data-ga="'+g.id+'">'+(busy==g.id?"Pensando…":g.plan?"✨ Rehacer plan":"✨ Plan con IA")+'</button></div>'+(sg?'<small style="color:var(--mut);display:block;margin-top:8px">'+sg+'</small>':"")+pl+'</div>'}).join("")||'<div class="card empty" style="text-align:center">Aún no tienes metas. Escribe una, toca una fecha y ¡a por ella! 🚀</div>'}
+$("gadd").onclick=function(){var n=$("gname").value.trim(),d=$("gdate").value;if(!n||!d){alert("Escribe la meta y elige una fecha en el calendario");return}
+  if(d<iso(new Date())){alert("Elige una fecha de hoy en adelante");return}
+  S.goals.push({id:Date.now(),n:n,date:d,min:+$("gmin").value,start:iso(new Date()),log:{}});$("gname").value="";$("gdate").value="";save();render()};
+$("gdate").onchange=render;
+$("pm").onclick=function(){cm=new Date(cm.getFullYear(),cm.getMonth()-1,1);goals()};
+$("nm").onclick=function(){cm=new Date(cm.getFullYear(),cm.getMonth()+1,1);goals()};
+document.addEventListener("click",function(e){var g=e.target,id;
+  if(id=g.closest("[data-d]")&&g.closest("[data-d]").getAttribute("data-d")){$("gdate").value=id;goals()}
+  else if(id=g.getAttribute("data-gx")){S.goals=S.goals.filter(function(x){return x.id!=id});save();render()}
+  else if(id=g.getAttribute("data-gl")){S.goals.forEach(function(x){if(x.id==id){var k=iso(new Date());if(x.log[k]){delete x.log[k];hAdd(-x.min)}else{x.log[k]=1;hAdd(x.min)}}});save();render()}
+  else if(id=g.getAttribute("data-gp")){S.goals.forEach(function(x){if(x.id==id)S.tasks.push({id:Date.now(),t:x.n,d:x.min,p:2,done:false,g:x.id})});fl=+id;save();render();fl=null}else if(id=g.getAttribute("data-ga"))ai(+id)});
+function page(p){document.body.setAttribute("data-pg",p);$("n1").className=p=="dia"?"on":"";$("n2").className=p=="metas"?"on":"";$("n3").className=p=="prog"?"on":"";window.scrollTo(0,0)}
+$("n1").onclick=function(){page("dia")};$("n2").onclick=function(){page("metas")};$("n3").onclick=function(){page("prog")};
+function hAdd(m){var k=iso(new Date());S.hist[k]=Math.max(0,(S.hist[k]||0)+m)}
+function rollover(){var k=iso(new Date());if(S.day!==k){S.tasks.forEach(function(t){if(t.r)t.done=false});S.day=k}}
+async function ai(id){var g=S.goals.filter(function(x){return x.id==id})[0];if(!g||busy)return;
+  var sm=null;try{sm=window.claude&&await claude.use("sample")}catch(e){}
+  if(!sm){alert("El plan con IA no está disponible en esta vista");return}
+  busy=id;render();
+  try{var left=Math.max(1,diff(iso(new Date()),g.date));
+    var r=await sm.json("Crea un plan en español para lograr esta meta: "+g.n+". Faltan "+left+" días y puede dedicar "+g.min+" min al día. Responde SOLO JSON con esta forma: {\"pasos\":[{\"titulo\":\"...\",\"detalle\":\"...\"}]}. Máximo 8 pasos, uno por semana o etapa, concretos y alcanzables.");
+    g.plan=(r.pasos||[]).slice(0,8).map(function(x){return{t:String(x.titulo||""),d:String(x.detalle||""),ok:0}});save()}catch(e){alert("No pude crear el plan, intenta de nuevo")}
+  busy=null;render()}
+function stats(){var T=new Date(),mx=1,ds=[],i;
+  for(i=6;i>=0;i--){var d=new Date(T.getFullYear(),T.getMonth(),T.getDate()-i),m=S.hist[iso(d)]||0;ds.push([d.toLocaleDateString("es-DO",{weekday:"short"}),m]);mx=Math.max(mx,m)}
+  var st=0,j=S.hist[iso(T)]>0?0:1;while(S.hist[iso(new Date(T.getFullYear(),T.getMonth(),T.getDate()-j))]>0){st++;j++}
+  var tot=0,best=0,k;for(k in S.hist){tot+=S.hist[k];best=Math.max(best,S.hist[k])}
+  var dn=S.tasks.filter(function(t){return t.done}).length;
+  $("prog").innerHTML='<h2>Tu progreso</h2><div class="row"><div class="card kp"><b>🔥 '+st+'</b>'+(st==1?"día":"días")+' seguidos</div><div class="card kp"><b>⏱ '+(tot/60).toFixed(1)+' h</b>en total</div><div class="card kp"><b>🏆 '+best+' min</b>mejor día</div><div class="card kp"><b>✅ '+dn+'</b>tareas hechas</div></div>'+
+  '<h2>Últimos 7 días (minutos)</h2><div class="card"><div style="display:flex;gap:6px;align-items:flex-end;height:130px">'+ds.map(function(x){return'<div style="flex:1;text-align:center;font-size:12px;color:var(--mut)"><div style="background:var(--acc);border-radius:6px 6px 0 0;height:'+Math.round(x[1]/mx*90)+'px;min-height:'+(x[1]?4:0)+'px"></div>'+x[0]+'<br>'+x[1]+'</div>'}).join("")+'</div></div>'}
+(async function(){try{
+  if(!window.claude||!window.claude.use)return;
+  var db=await claude.use("db");if(!db)return;
+  var u=await claude.use("user");if(u&&u.can){var c=await u.can("data.write");if(c===false)rw=false}
+  ref=db.doc("data/plan");status(rw?"☁️ Compartido en tiempo real":"👀 Solo lectura");
+  ref.onSnapshot(function(sn){
+    if(sn.exists){var d=sn.data();if(d&&d.json&&d.json!==JSON.stringify(S)){try{var o=JSON.parse(d.json);if(o&&o.tasks){S=o;S.goals=S.goals||[];S.hist=S.hist||{};try{localStorage.setItem("midia",d.json)}catch(e){}render()}}catch(e){}}}
+    else if(rw&&(S.tasks.length||S.goals.length))push();
+  },function(){ref=null;status("📱 Solo en este dispositivo")});
+}catch(e){}})();
+page("dia");rollover();render();
+</script>
+</body>
+</html>
